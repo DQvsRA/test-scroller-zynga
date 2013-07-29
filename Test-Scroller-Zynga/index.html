@@ -25,16 +25,130 @@
         <link rel="stylesheet" type="text/css" href="css/index.css" />
         <title>Hello World</title>
     </head>
+    <style type="text/css">
+        
+	
+	</style>
+
     <body>
         <div class="app">
-            <h1>Apache Cordova</h1>
+            <h1>Scroller Zynga</h1>
             <div id="deviceready" class="blink">
                 <p class="event listening">Connecting to Device</p>
                 <p class="event received">Device is Ready</p>
+                
+            </div>
+            <div id="setuper">
+                <input id="rowelements" min="1" max="2" value="3" type="number"/>
+                <div id="process">Start</div>
+            </div>
+            <div id="container">
+                <div id="content" >
+		        </div>
             </div>
         </div>
         <script type="text/javascript" src="cordova.js"></script>
+        <script type="text/javascript" src="js/libs/scroller/Animate.js"></script>
+        <script type="text/javascript" src="js/libs/scroller/Scroller.js"></script>
         <script type="text/javascript" src="js/index.js"></script>
+        <script type="text/javascript">
+        	var container = document.getElementById("container");
+        	var content = document.getElementById("content");
+            container.style.height = (window.innerHeight - container.offsetTop) + "px";
+            var contentHeight = content.clientHeight;
+            var contentWidth = content.clientWidth;
+            //container.style.overflow = "scroll";
+            //container.style["-webkit-overflow-scrolling"] = "touch";
+            //data-scrollable="y" // USE FOR EASY SCROLL
+            
+            process.addEventListener("touchend", function(e) {
+    			Process();
+    		}, false);
+            
+            function Process(){
+                content.innerHTML = '';
+                process.innerHTML = "Restart";
+                var countX = rowelements.value || 3;
+                var cellSize = Math.floor(contentWidth / countX);
+                var cellSizePx = cellSize + "px";
+                
+            	var frag = document.createDocumentFragment();
+            	for (var row=0, rl=contentHeight/cellSize-1; row<rl; row++) {
+            		for (var cell=0; cell<countX; cell++) {
+            			elem = document.createElement("div");
+            			elem.className = "cell";
+            			elem.style.backgroundColor = row%2 + cell%2 > 0 ? "#ddd" : "";
+            			elem.style.width = cellSizePx;
+            			elem.style.height = cellSizePx;
+            			elem.innerHTML = row+","+cell;
+            			frag.appendChild(elem);
+            		}
+            	}
+            	content.appendChild(frag);
+                scroller.setSnapSize(cellSize, cellSize);
+                scroller.scrollTo(0, 0);
+            }
+            
+        	// Content Generator
+            
+            
+            //document.ontouchmove  = function(e){ if(e.target != container) e.preventDefault(); }
+                        
+            var render = (function(global) {
+            	var docStyle = document.documentElement.style;
+            	var engine;
+            	if ('WebkitAppearance' in docStyle) engine = 'webkit';
+            	else if (typeof navigator.cpuClass === 'string') engine = 'trident'; 
+            	var vendorPrefix = { webkit: 'Webkit', }[engine];
+            	var helperElem = document.createElement("div");
+            	var undef;
+            	var perspectiveProperty = vendorPrefix + "Perspective";
+            	var transformProperty = vendorPrefix + "Transform";
+            	if (helperElem.style[perspectiveProperty] !== undef) {
+            		return function(left, top, zoom) {
+            			content.style[transformProperty] = 'translate3d(' + (-left) + 'px,' + (-top) + 'px,0) scale(' + zoom + ')';
+            		};	
+            	} else if (helperElem.style[transformProperty] !== undef) {
+            		return function(left, top, zoom) {
+            			content.style[transformProperty] = 'translate(' + (-left) + 'px,' + (-top) + 'px) scale(' + zoom + ')';
+            		};
+            	} else {
+            		return function(left, top, zoom) {
+            			content.style.marginLeft = left ? (-left/zoom) + 'px' : '';
+            			content.style.marginTop = top ? (-top/zoom) + 'px' : '';
+            			content.style.zoom = zoom || '';
+            		};
+            	}
+            })(this);
+            
+            var scroller = new Scroller(render, { snapping: true, scrollingX : false });
+            var rect = container.getBoundingClientRect();
+            scroller.setPosition(rect.left+container.clientLeft, rect.top+container.clientTop);
+            scroller.setDimensions(container.clientWidth, container.clientHeight, content.offsetWidth, content.offsetHeight);
+            
+            if ('ontouchstart' in window) {
+		
+        		container.addEventListener("touchstart", function(e) {
+        			// Don't react if initial down happens on a form element
+        			if (e.target.tagName.match(/input|textarea|select/i)) {
+        				return;
+        			}
+        			
+        			scroller.doTouchStart(e.touches, e.timeStamp);
+        			e.preventDefault();
+        		}, false);
+        
+        		document.addEventListener("touchmove", function(e) {
+        			scroller.doTouchMove(e.touches, e.timeStamp);
+        		}, false);
+        
+        		document.addEventListener("touchend", function(e) {
+        			scroller.doTouchEnd(e.timeStamp);
+        		}, false);
+        	}
+            
+        </script>
+        <script type="text/javascript" src="js/libs/EasyScroller.js"></script>
         <script type="text/javascript">
             app.initialize();
         </script>
